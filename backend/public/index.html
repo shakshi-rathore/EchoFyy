@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Login / Signup - Echofy</title>
+  <style>
+    body{font-family: Arial; max-width:520px;margin:40px auto;}
+    input, button{display:block;width:100%;padding:8px;margin:6px 0;}
+  </style>
+</head>
+<body>
+  <h2>Echofy — Login / Signup</h2>
+
+  <div id="auth">
+    <input id="username" placeholder="Username (for signup)"/>
+    <input id="email" placeholder="Email"/>
+    <input id="password" type="password" placeholder="Password"/>
+    <button id="signup">Signup</button>
+    <button id="login">Login</button>
+    <div id="msg"></div>
+  </div>
+
+<script>
+const api = '';
+const msg = id => document.getElementById('msg').innerText = id;
+
+document.getElementById('signup').onclick = async () => {
+  const username = document.getElementById('username').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const res = await fetch('/api/signup', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({username,email,password})
+  });
+  const json = await res.json();
+  if (res.ok && json.token) {
+    localStorage.setItem('token', json.token);
+    window.location = '/main.html';
+  } else {
+    msg(JSON.stringify(json));
+  }
+};
+
+document.getElementById('login').onclick = async () => {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const res = await fetch('/api/login', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({email,password})
+  });
+  const json = await res.json();
+  if (res.ok && json.token) {
+    localStorage.setItem('token', json.token);
+    window.location = '/main.html';
+  } else {
+    msg(JSON.stringify(json));
+  }
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Echofy</title>
+  <style>
+    body{font-family: Arial; max-width:720px;margin:40px auto;}
+    input, button, select{display:block;width:100%;padding:8px;margin:6px 0;}
+    audio{width:100%; margin-top:10px;}
+  </style>
+</head>
+<body>
+  <h2>Upload Image → OCR → Speech</h2>
+  <button id="logout">Logout</button>
+
+  <input type="file" id="image" accept="image/*"/>
+  <label>OCR language (tesseract codes, e.g. eng, hin):</label>
+  <input id="ocr_lang" placeholder="eng" value="eng"/>
+  <label>TTS language (gTTS codes, e.g. en, hi):</label>
+  <input id="tts_lang" placeholder="en" value="en"/>
+  <button id="process">Process & Play</button>
+
+  <div id="status"></div>
+  <audio id="player" controls></audio>
+
+<script>
+const status = (t)=> document.getElementById('status').innerText = t;
+const token = localStorage.getItem('token');
+if (!token) {
+  window.location = '/';
+}
+
+document.getElementById('logout').onclick = ()=> { localStorage.removeItem('token'); window.location='/' }
+
+document.getElementById('process').onclick = async () => {
+  const file = document.getElementById('image').files[0];
+  if (!file) return status('Select an image first.');
+  const ocr_lang = document.getElementById('ocr_lang').value || 'eng';
+  const tts_lang = document.getElementById('tts_lang').value || 'en';
+
+  const form = new FormData();
+  form.append('image', file);
+  form.append('ocr_lang', ocr_lang);
+  form.append('tts_lang', tts_lang);
+
+  status('Uploading and processing...');
+
+  try {
+    const res = await fetch('/api/process-image', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token },
+      body: form
+    });
+
+    if (!res.ok) {
+      const json = await res.json();
+      status('Error: ' + (json.error || JSON.stringify(json)));
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const audio = document.getElementById('player');
+    audio.src = url;
+    audio.play();
+    status('Playing audio — extracted text read aloud.');
+  } catch (err) {
+    console.error(err);
+    status('Upload failed: ' + err.message);
+  }
+};
+</script>
+</body>
+</html>
